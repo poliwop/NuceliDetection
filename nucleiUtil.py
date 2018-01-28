@@ -5,7 +5,7 @@ import numpy as np
 def get_image_list(dir):
     image_list = [None]*len(listdir(dir))
 
-    print "converting images to matrices"
+    print("converting images to matrices")
     for i in range(len(listdir(dir))):
         image_id = listdir(dir)[i]
         img_path = dir + image_id + '/images/' + image_id + '.png'

@@ -12,8 +12,8 @@ intensity_threshold = 0.3
 def lower_resolution(array, factor):
     input_columns = array.shape[1]
     input_rows = array.shape[0]
-    output_columns = input_columns/factor
-    output_rows = input_rows/factor
+    output_columns = input_columns//factor
+    output_rows = input_rows//factor
     output = np.zeros(shape=(output_rows, output_columns))
     for i in range(output_rows):
         for j in range(output_columns):
@@ -44,11 +44,11 @@ with open(output_filename, 'w') as outputfile:
                         top_pixel = (j*factor + k)*height + i*factor + 1
                         pixels += str(top_pixel)+' ' + str(factor) + ' '
                         if top_pixel > test:
-                            print image[0]
-                            print test
-                            print top_pixel
-                            print i, j, pixelated[i][j]
+                            print(image[0])
+                            print(test)
+                            print(top_pixel)
+                            print([i, j, pixelated[i][j]])
                             raise
                     writer.writerow([image[0], pixels])
         if counter % 10 == 0:
-            print 'starting image number '+str(counter)
+            print('starting image number '+str(counter))
