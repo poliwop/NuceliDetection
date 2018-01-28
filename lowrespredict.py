@@ -5,7 +5,7 @@ import numpy as np
 testing_data_path = 'data/stage1_test/'
 output_filename = 'prediction.csv'
 image_list = get_image_list(testing_data_path)
-threshold = 200 #keep pixels at least this bright
+threshold = 150 #keep pixels at least this bright
 factor = 16 #compress width/height by factor of 16
 intensity_threshold = 0.3
 
