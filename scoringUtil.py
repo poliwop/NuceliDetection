@@ -11,9 +11,8 @@ def get_image_size(id, data_path):
 
 def get_feature_mask(output_str, image_size):
     h = image_size[0]
-    w = image_size[1]
     output_list = output_str.split()
-    feature_mask = np.asarray([[0]*w]*h, np.uint16)
+    feature_mask = np.zeros(image_size[:2], np.uint16)
     for i in range(0, len(output_list), 2):
         top_pixel = int(output_list[i]) - 1
         num_pixels = int(output_list[i + 1])
@@ -23,29 +22,76 @@ def get_feature_mask(output_str, image_size):
             feature_mask[top_pixel_r + j][top_pixel_c] = 1
     return feature_mask
 
-def get_labels(id, data_path):
-    # Load a single image and its associated masks
-    file = data_path + "{}/images/{}.png".format(id,id)
-    masks = data_path + "{}/masks/*.png".format(id)
-    image = skimage.io.imread(file)
+def get_rect_coords(output_str, image_size):
+    h = image_size[0]
+    output_list = output_str.split()
+    output_list = np.array(output_list, np.uint16)
+    top_pixels = output_list[::2] - 1
+    bottom_pixels = top_pixels + output_list[1::2] - 1
+    left_col = top_pixels[0] // h
+    right_col = top_pixels[-1] // h
+    top_pixels_r = top_pixels % h
+    top_row = min(top_pixels_r)
+    bottom_pixels_r = bottom_pixels % h
+    bottom_row = max(bottom_pixels_r)
+    return (top_row, left_col, bottom_row, right_col)
 
-    masks = skimage.io.imread_collection(masks).concatenate()
-    height, width, _ = image.shape
-    num_masks = masks.shape[0]
+def do_rects_intersect(rect_1, rect_2):
+    intersect = False
+    (x1, y1, w1, z1) = rect_1
+    (x2, y2, w2, z2) = rect_2
+    if x1 <= w2 and y1 <= z2 and w1 >= x2 and z1 >= y2:
+        intersect = True
+    return intersect
 
-    # Make a ground truth label image (pixel value is index of object label)
-    labels = np.zeros((height, width), np.uint16)
-    for index in range(0, num_masks):
-        labels[masks[index] > 0] = index + 1
-    return labels
+def test_do_rects_intersect():
+    rect1 = (1, 1, 5, 6)
+    rect2 = (3, 3, 7, 6)
+    rect3 = (10, 1, 12, 2)
+    rect4 = (1, 10, 1, 10)
+    print(do_rects_intersect(rect1, rect2))
+    print(do_rects_intersect(rect2, rect1))
+    print(do_rects_intersect(rect1, rect3))
+    print(do_rects_intersect(rect3, rect1))
+    print(do_rects_intersect(rect1, rect4))
+    print(do_rects_intersect(rect4, rect1))
+
 
 def get_image_prediction(features, image_size):
     image = np.zeros(image_size[:2], np.uint16)
     for i,feature_str in enumerate(features):
         feature_mask = get_feature_mask(feature_str, image_size)
-        image += (i+1)*feature_mask
+        image[feature_mask > 0] = i+1
     return image
 
+def get_rect_intersections(image_data, key_data, image_size):
+    image_rect_list = [None]*len(image_data)
+    key_rect_list = [None]*len(key_data)
+    for i,feature in enumerate(image_data):
+        image_rect_list[i] = get_rect_coords(feature, image_size) + (i + 1,)
+    for i,feature in enumerate(key_data):
+        key_rect_list[i] = get_rect_coords(feature, image_size) + (i + 1,)
+    image_rect_list.sort()
+    key_rect_list.sort()
+
+    intersecting_pairs = []
+    min_j = 0
+    i = 0
+    while i < len(image_rect_list):
+        image_rect = image_rect_list[i]
+        while min_j < len(key_rect_list) and image_rect[0] > key_rect_list[min_j][2]:
+            min_j += 1
+        j = min_j
+        while j < len(key_rect_list) and image_rect[2] > key_rect_list[j][0]:
+            if do_rects_intersect(image_rect[:4], key_rect_list[j][:4]):
+                intersecting_pairs.append((i,j))
+            j += 1
+        i += 1
+
+    pairs = [None]*len(intersecting_pairs)
+    for j,(image_i, key_i) in enumerate(intersecting_pairs):
+        pairs[j] = (image_rect_list[image_i][4], key_rect_list[key_i][4])
+    return pairs
 
 # Precision helper function
 def precision_at(threshold, iou):
@@ -57,7 +103,9 @@ def precision_at(threshold, iou):
     return tp, fp, fn
 
 
-def get_score(labels, y_pred):
+def get_score(image_data, key_data, image_size):
+    y_pred = get_image_prediction(image_data, image_size)
+    labels = get_image_prediction(key_data, image_size)
 
     # Compute number of objects
     true_objects = len(np.unique(labels))
@@ -65,7 +113,31 @@ def get_score(labels, y_pred):
     print("Number of true objects:", true_objects)
     print("Number of predicted objects:", pred_objects)
 
+    '''
     # Compute intersection between all objects
+    rect_intersections = get_rect_intersections(image_data, key_data, image_size)
+    intersection = np.zeros([len(key_data) + 1, len(image_data) + 1])
+    for (pred_feature_id, true_feature_id) in rect_intersections:
+        pred_mask = np.zeros_like(y_pred)
+        pred_mask[y_pred == pred_feature_id] = pred_feature_id
+        true_mask = np.zeros_like(labels)
+        true_mask[labels == true_feature_id] = true_feature_id
+        temp = np.histogram2d(true_mask.flatten(), pred_mask.flatten(), bins=(2, 2))[0][1][1]
+        intersection[true_feature_id, pred_feature_id] = temp
+
+
+
+    for i in range(len(key_data)):
+        mask = np.zeros_like(labels)
+        mask[labels == i+1] = 1
+        intersection[i + 1][0] = np.sum(mask, axis=(0, 1)) - np.sum(intersection, axis = 1)[i + 1]
+    for i in range(len(image_data)):
+        mask = np.zeros_like(y_pred)
+        mask[y_pred == i+1] = 1
+        intersection[0][i + 1] = np.sum(mask, axis=(0, 1)) - np.sum(intersection, axis = 0)[i + 1]
+
+    intersection[0][0] = image_size[0] * image_size[1] - np.sum(intersection)
+    '''
     intersection = np.histogram2d(labels.flatten(), y_pred.flatten(), bins=(true_objects, pred_objects))[0]
 
     # Compute areas (needed for finding the union between all objects)
@@ -95,10 +167,9 @@ def get_score(labels, y_pred):
         prec.append(p)
     return [np.mean(prec), image_stats]
 
-def score(output_csv, data_path):
-
+def get_image_dict(csv_filename):
     image_dict = {}
-    with open(output_csv) as csvfile:
+    with open(csv_filename) as csvfile:
         csv_reader = csv.reader(csvfile)
         next(csv_reader, None)
         for row in csv_reader:
@@ -108,15 +179,20 @@ def score(output_csv, data_path):
                 image_dict[id].append(feature_str)
             else:
                 image_dict[id] = [feature_str]
+    return image_dict
+
+def score(output_csv, key_csv, data_path):
+
+    image_dict = get_image_dict(output_csv)
+    key_dict = get_image_dict(key_csv)
 
     image_list = list(image_dict.keys())
     image_stats_dict = dict.fromkeys(image_list)
     image_score_dict = dict.fromkeys(image_list)
     for i,image_id in enumerate(image_list):
         image_size = get_image_size(image_id, data_path)
-        pred = get_image_prediction(image_dict[image_id], image_size)
-        labels = get_labels(image_id, data_path)
-        [image_score, image_stats] = get_score(labels, pred)
+        [image_score, image_stats] = get_score(image_dict[image_id], key_dict[image_id], image_size)
+        #[image_score, image_stats] = get_score(labels, pred)
         image_stats_dict[image_id] = image_stats
         image_score_dict[image_id] = image_score
         print(i)
