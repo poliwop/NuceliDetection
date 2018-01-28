@@ -13,7 +13,7 @@ def lower_resolution(array, factor):
     output_columns = input_columns/factor
     output_rows = input_rows/factor
     output = np.zeros(shape=(output_rows, output_columns))
-    if (input_rows % 16) or (input_columns % 16):
+    if (input_rows % factor) or (input_columns % factor):
         return output
     i=0
     while i < output_rows:
@@ -30,6 +30,8 @@ def lower_resolution(array, factor):
             output[i][j]=float(pixel)/(factor*factor)
             j += 1
         i += 1
+    if np.average(output)/255>=0.3:
+        output = 255-output
     output *= (255.0/output.max())
     return output
 
@@ -50,11 +52,11 @@ with open('prediction.csv', 'w') as outputfile:
                 if pixelated[i][j] > threshhold:
                     pixels = ''
                     for k in range(factor):
-                        pixels += str(j*16*height+i*factor+k*height+1)+' 16 '
-                        if j*16*height+i*factor+k*height+1 > test:
+                        pixels += str(j*factor*height+i*factor+k*height+1)+' 8 '
+                        if j*factor*height+i*factor+k*height+1 > test:
                             print image[0]
                             print test
-                            print j*16*height+i*factor+k*height+1
+                            print j*factor*height+i*factor+k*height+1
                             print i, j, pixelated[i][j]
                             raise
                     writer.writerow([image[0], pixels])
