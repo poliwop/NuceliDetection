@@ -43,11 +43,12 @@ with open(output_filename, 'w') as outputfile:
                 if pixelated[i][j] > threshold:
                     pixels = ''
                     for k in range(factor):
-                        pixels += str(j*factor*height+i*factor+k*height+1)+' 8 '
-                        if j*factor*height+i*factor+k*height+1 > test:
+                        top_pixel = (j*factor + k)*height + i*factor + 1
+                        pixels += str(top_pixel)+' ' + str(factor) + ' '
+                        if top_pixel > test:
                             print image[0]
                             print test
-                            print j*factor*height+i*factor+k*height+1
+                            print top_pixel
                             print i, j, pixelated[i][j]
                             raise
                     writer.writerow([image[0], pixels])
