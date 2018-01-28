@@ -32,8 +32,7 @@ def lower_resolution(array, factor):
 with open(output_filename, 'w') as outputfile:
     writer = csv.writer(outputfile, lineterminator='\n')
     writer.writerow(['ImageId', 'EncodedPixels'])
-    counter=0
-    for image in image_list:
+    for counter,image in enumerate(image_list):
         test = image[1].shape[0]*image[1].shape[1]
         height =image[1].shape[0] #height of original image in pixels
         pixelated = lower_resolution(image[1], factor)
@@ -52,6 +51,5 @@ with open(output_filename, 'w') as outputfile:
                             print i, j, pixelated[i][j]
                             raise
                     writer.writerow([image[0], pixels])
-        counter += 1
         if counter % 10 == 0:
             print 'starting image number '+str(counter)
