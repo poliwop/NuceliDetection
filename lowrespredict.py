@@ -15,8 +15,6 @@ def lower_resolution(array, factor):
     output_columns = input_columns/factor
     output_rows = input_rows/factor
     output = np.zeros(shape=(output_rows, output_columns))
-    if (input_rows % factor) or (input_columns % factor):
-        return output
     for i in range(output_rows):
         for j in range(output_columns):
             pixel = 0
