@@ -18,15 +18,14 @@ def get_feature_mask(output_str, image_size):
         num_pixels = int(output_list[i + 1])
         top_pixel_c = top_pixel // h
         top_pixel_r = top_pixel % h
-        for j in range(num_pixels):
-            feature_mask[top_pixel_r + j][top_pixel_c] = 1
+        feature_mask[top_pixel_r:(top_pixel_r+num_pixels),top_pixel_c] = 1
     return feature_mask
 
 
 def get_image_prediction(features, image_size):
     image = np.zeros(image_size[:2], np.uint16)
-    for i,feature_str in enumerate(features):
-        feature_mask = get_feature_mask(feature_str, image_size)
+    for i,feature in enumerate(features):
+        feature_mask = get_feature_mask(feature, image_size)
         image[feature_mask > 0] = i+1
     return image
 
