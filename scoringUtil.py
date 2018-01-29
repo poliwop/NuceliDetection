@@ -46,9 +46,6 @@ def get_score(image_data, key_data, image_size):
     # Compute number of objects
     true_objects = len(np.unique(labels))
     pred_objects = len(np.unique(y_pred))
-    print("Number of true objects:", true_objects)
-    print("Number of predicted objects:", pred_objects)
-
 
     # Compute intersection between all objects
     intersection = np.histogram2d(labels.flatten(), y_pred.flatten(), bins=(true_objects, pred_objects))[0]
@@ -105,10 +102,9 @@ def score(output_csv, key_csv, data_path):
     for i,image_id in enumerate(image_list):
         image_size = get_image_size(image_id, data_path)
         [image_score, image_stats] = get_score(image_dict[image_id], key_dict[image_id], image_size)
-        #[image_score, image_stats] = get_score(labels, pred)
         image_stats_dict[image_id] = image_stats
         image_score_dict[image_id] = image_score
-        print(i)
+        #print(i)
 
     score_list = list(image_score_dict.values())
     return [sum(score_list)/len(score_list), image_score_dict, image_stats_dict]
