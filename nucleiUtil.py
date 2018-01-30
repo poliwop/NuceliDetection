@@ -17,6 +17,8 @@ def get_image_list(dir):
     return image_list
 
 def set_min_area(labeled_list, min_area):
+    if min_area == 1:
+        return
     for image in labeled_list:
         image_mat = image[1]
         unique, cts = np.unique(image_mat, return_counts=True)
