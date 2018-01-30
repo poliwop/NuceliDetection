@@ -39,9 +39,7 @@ def precision_at(threshold, iou):
     return tp, fp, fn
 
 
-def get_score(image_data, key_data, image_size):
-    y_pred = get_image_prediction(image_data, image_size)
-    labels = get_image_prediction(key_data, image_size)
+def get_score(y_pred, labels):
 
     # Compute number of objects
     true_objects = len(np.unique(labels))
@@ -91,20 +89,30 @@ def get_image_dict(csv_filename):
                 image_dict[id] = [feature_str]
     return image_dict
 
-def score(output_csv, key_csv, data_path):
+def score_output(output_csv, key_csv, data_path):
 
     image_dict = get_image_dict(output_csv)
-    key_dict = get_image_dict(key_csv)
 
     image_list = list(image_dict.keys())
     image_stats_dict = dict.fromkeys(image_list)
     image_score_dict = dict.fromkeys(image_list)
+    images = [None]*len(image_list)
     for i,image_id in enumerate(image_list):
         image_size = get_image_size(image_id, data_path)
-        [image_score, image_stats] = get_score(image_dict[image_id], key_dict[image_id], image_size)
-        image_stats_dict[image_id] = image_stats
-        image_score_dict[image_id] = image_score
-        #print(i)
+        images[i] = [image_id, get_image_prediction(image_dict[image_id], image_size)]
+
+    return score_matrices(images, key_csv)
+
+def score_matrices(labeled_images, key_csv):
+    key_dict = get_image_dict(key_csv)
+    image_stats_dict = {}
+    image_score_dict = {}
+    for image in labeled_images:
+        image_size = image[1].shape
+        labels = get_image_prediction(key_dict[image[0]], image_size)
+        [image_score, image_stats] = get_score(image[1], labels)
+        image_stats_dict[image[0]] = image_stats
+        image_score_dict[image[0]] = image_score
 
     score_list = list(image_score_dict.values())
-    return [sum(score_list)/len(score_list), image_score_dict, image_stats_dict]
+    return [sum(score_list) / len(score_list), image_score_dict, image_stats_dict]
