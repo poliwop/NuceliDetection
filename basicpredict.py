@@ -5,13 +5,11 @@ import numpy as np
 import sys
 import cProfile
 
-sys.setrecursionlimit(5000)
-testing_data_path = 'data/stage1_train/'
-output_filename = 'predictionBasic.csv'
+testing_data_path = 'data/stage1_test/'
+output_filename = 'prediction.csv'
 key_csv = 'data/stage1_train_labels.csv'
-threshold = 200 #keep pixels at least thi# s bright
-thresholds = [45, 50, 55]
-min_area = 1
+threshold = 50 #keep pixels at least thi# s bright
+min_area = 10
 
 def run_basic_predict(image_list, threshold):
 
@@ -19,7 +17,7 @@ def run_basic_predict(image_list, threshold):
     labeled_list = [None]*len(image_list)
     feature_ct = [None]*len(image_list)
     for i,image in enumerate(image_list):
-        if i%100 == 0:
+        if i%10 == 0:
             print(str(i) + ' out of ' + str(len(image_list)))
         classified_image = process_image(image[1], threshold)
         labeled_image = image_labeler(classified_image)
@@ -70,19 +68,18 @@ def label_component(im, lab_im, label, i, j):
         [i,j] = stack.pop()
 
 
-def temp_function():
-    image_list = get_image_list(testing_data_path)
-    for t in thresholds:
-        print(t)
-        print("getting predictions")
-        labeled_list = run_basic_predict(image_list, t)
-    #print("removing tiny features")
-    #set_min_area(labeled_list, min_area)
-        print("scoring")
-        myscore = score_matrices(labeled_list, key_csv)
-        print(myscore[0])
-#print("writing output")
-#write_output_file(labeled_list, output_filename)
+
+image_list = get_image_list(testing_data_path)
+print("getting predictions")
+labeled_list = run_basic_predict(image_list, threshold)
+
+print("removing tiny features")
+set_min_area(labeled_list, min_area)
+#print("scoring")
+#myscore = score_matrices(labeled_list, key_csv)
+#print(myscore[0])
+print("writing output")
+write_output_file(labeled_list, output_filename)
 
 
-cProfile.run('temp_function()')
+#cProfile.run('temp_function()')
