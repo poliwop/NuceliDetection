@@ -15,3 +15,11 @@ def get_image_list(dir):
         img = skimage.color.rgb2gray(img)*255
         image_list[i] = [image_id, img]
     return image_list
+
+def set_min_area(labeled_list, min_area):
+    for image in labeled_list:
+        image_mat = image[1]
+        unique, cts = np.unique(image_mat, return_counts=True)
+        for i,label in enumerate(unique):
+            if cts[i] < min_area:
+                image_mat[image_mat == label] = 0
