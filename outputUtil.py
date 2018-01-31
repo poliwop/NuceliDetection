@@ -25,7 +25,8 @@ def get_feature_list(im):
     for i in range(max_feature):
         feature = np.zeros_like(im)
         feature[im == i+1] = 1
-        feature_str = rle_encoding(feature)
+        feature_ls = [str(x) for x in rle_encoding(feature)]
+        feature_str = " ".join(feature_ls)
         if len(feature_str) > 0:
             feature_list.append(feature_str)
     return feature_list
