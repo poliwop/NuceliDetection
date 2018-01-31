@@ -24,8 +24,8 @@ def process_image(image, threshold):
     # Invert if light background
     image -= image.min()
     image *= (255.0 / image.max())
-    intensity_threshold = 0.5
-    if np.average(image) / 255 >= intensity_threshold:
+    intensity_threshold = 0.4
+    if image.mean() / 255 >= intensity_threshold:
         image = 255 - image
     classified_image = np.zeros_like(image)
     classified_image[image > threshold] = 1
