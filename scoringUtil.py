@@ -41,8 +41,9 @@ def precision_at(threshold, iou):
 
 
 def get_score(y_pred, labels):
-
-    y_pred = relabel(y_pred)
+    [u,c] = np.unique(y_pred, return_counts=True)
+    if max(c) != len(c) - 1:
+        y_pred = relabel(y_pred)
 
     # Compute number of objects
     true_objects = len(np.unique(labels))
