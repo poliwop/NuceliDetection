@@ -31,3 +31,11 @@ def set_min_area(labeled_list, min_area):
         for i,label in enumerate(unique):
             if cts[i] < min_area:
                 image_mat[image_mat == label] = 0
+
+def relabel(image_mat):
+    relabeled_mat = np.zeros_like(image_mat)
+    unique = np.unique(image_mat, return_counts=False)
+    unique.sort()
+    for i,val in enumerate(unique):
+        relabeled_mat[image_mat == val] = i
+    return relabeled_mat

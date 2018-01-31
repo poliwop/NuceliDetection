@@ -2,6 +2,7 @@ import skimage.io
 import numpy as np
 import skimage.segmentation
 import csv
+from nucleiUtil import relabel
 
 
 def get_image_size(id, data_path):
@@ -40,6 +41,8 @@ def precision_at(threshold, iou):
 
 
 def get_score(y_pred, labels):
+
+    y_pred = relabel(y_pred)
 
     # Compute number of objects
     true_objects = len(np.unique(labels))
@@ -94,8 +97,6 @@ def score_output(output_csv, key_csv, data_path):
     image_dict = get_image_dict(output_csv)
 
     image_list = list(image_dict.keys())
-    image_stats_dict = dict.fromkeys(image_list)
-    image_score_dict = dict.fromkeys(image_list)
     images = [None]*len(image_list)
     for i,image_id in enumerate(image_list):
         image_size = get_image_size(image_id, data_path)
