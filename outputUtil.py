@@ -25,30 +25,19 @@ def get_feature_list(im):
     for i in range(max_feature):
         feature = np.zeros_like(im)
         feature[im == i+1] = 1
-        feature_str = get_feature_str(feature)
+        feature_str = rle_encoding(feature)
         if len(feature_str) > 0:
             feature_list.append(feature_str)
     return feature_list
 
-def get_feature_str(im):
-    h = im.shape[0]
-    w = im.shape[1]
-    pairs = []
-    for i in range(w):
-        col = im[:,i]
-        [starts, heights] = get_feature_starts(col)
-        pairs.extend(zip(i*h + starts + 1, heights))
-    out_list = [str(x) for pair in pairs for x in pair]
-    out_str = " ".join(out_list)
-    return out_str
 
-def get_feature_starts(col):
-    col_diff = np.empty_like(col)
-    col_diff[0] = col[0]
-    col_diff[1:] = (col[1:] - col[:-1])
-    feature_starts = np.where(col_diff == 1)[0]
-    feature_ends = np.where(col_diff == -1)[0]
-    if len(feature_ends) < len(feature_starts):
-        feature_ends = np.append(feature_ends, len(col))
-    feature_heights = feature_ends - feature_starts
-    return [feature_starts, feature_heights]
+# Run-length encoding stolen from https://www.kaggle.com/rakhlin/fast-run-length-encoding-python
+def rle_encoding(x):
+    dots = np.where(x.T.flatten() == 1)[0]
+    run_lengths = []
+    prev = -2
+    for b in dots:
+        if (b>prev+1): run_lengths.extend((b + 1, 0))
+        run_lengths[-1] += 1
+        prev = b
+    return run_lengths
