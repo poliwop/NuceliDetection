@@ -4,6 +4,7 @@ import skimage.color
 from os import listdir
 import numpy as np
 
+#   Gets list of pairs [image_id, image_mat] from dir
 def get_image_list(dir):
     image_list = [None]*len(listdir(dir))
 
@@ -16,7 +17,12 @@ def get_image_list(dir):
         image_list[i] = [image_id, img]
     return image_list
 
+
+#   Removes features with pixel count smaller than min_area from images in labeled_list
 def set_min_area(labeled_list, min_area):
+#   labeled_list    List of pairs [image_id, image_mat] where image_mat is a ndarray
+#                   with pixels labeled by feature
+
     if min_area == 1:
         return
     for image in labeled_list:

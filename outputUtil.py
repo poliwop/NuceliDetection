@@ -2,6 +2,9 @@ import numpy as np
 import csv
 
 def write_output_file(labeled_list, filename):
+    # labeled_list  List of pairs [image_id, labeled_im] where labeled_im is an ndarray with labeled connected
+    #               components
+    # filename      Full path to output file
 
     rows = []
     for i, labeled_image in enumerate(labeled_list):

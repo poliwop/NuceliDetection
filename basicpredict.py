@@ -1,10 +1,14 @@
 import skimage.measure
 import numpy as np
 
-
+#   Applies a threshold and labels connected components of the resulting image, for each image in list
 def run_basic_predict(image_list, threshold):
+    # image_list    List of pairs [image_id, image_mat] where image_mat is an ndarray representing a grayscale image
+    # threshold     number in (0, 256)
+    #
+    # returns       List of pairs [image_id, labeled_im] where labeled_im is an ndarray with labeled connected
+    #               components
 
-    # Get labeled image
     labeled_list = [None]*len(image_list)
     for i,image in enumerate(image_list):
         if i%50 == 0:
