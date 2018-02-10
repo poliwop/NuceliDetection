@@ -55,12 +55,15 @@ def get_threshold(image):
     #min_area = 10
     #max_area = image.shape[0]*image.shape[1]/2
     #max_area = 1000
-    component_cts = np.empty(256)
-    for t in range(0,256,1):
+
+    min_brightness = image.min().round().astype('uint8')
+    max_brightness = image.max().round().astype('uint8')
+    component_cts = np.empty(max_brightness + 1 - min_brightness, dtype='int32')
+    for t in range(min_brightness,max_brightness + 1):
         classified_image = np.zeros_like(image)
         classified_image[image > t] = 1
         [_, component_ct] = skimage.measure.label(classified_image, return_num=True)
-        component_cts[t] = component_ct
+        component_cts[t - min_brightness] = component_ct
         #feature_props_list = skimage.measure.regionprops(labeled_image)
         #feature_areas = []
         #for feature in feature_props_list:
