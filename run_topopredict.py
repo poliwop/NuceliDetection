@@ -4,8 +4,8 @@ from scoringUtil import score_matrices
 from outputUtil import write_output_file
 import cProfile
 
-testing_data_path = 'data/stage1_train/'
-output_filename = 'predictionVarThreshold.csv'
+testing_data_path = 'data/stage1_test/'
+output_filename = 'prediction_topo_002.csv'
 key_csv = 'data/stage1_train_labels.csv'
 #threshold = 50 #keep pixels at least this bright
 intensity_threshold = 0.3
@@ -20,14 +20,14 @@ def temp_function():
     labeled_list = run_topo_predict(image_list, intensity_threshold)
     print("removing tiny features")
     set_min_area(labeled_list, min_area)
-    print("scoring")
-    myscore = score_matrices(labeled_list, key_csv)
-    results.append((myscore[0]))
-    print(results[-1])
+    #print("scoring")
+    #myscore = score_matrices(labeled_list, key_csv)
+    #results.append((myscore[0]))
+    #print(results[-1])
     for r in results:
         print(r)
-    #print("writing output")
-    #write_output_file(labeled_list, output_filename)
+    print("writing output")
+    write_output_file(labeled_list, output_filename)
 
 
 

@@ -12,7 +12,7 @@ def run_topo_predict(image_list, intensity_threshold):
 
     labeled_list = [None]*len(image_list)
     for i,image in enumerate(image_list):
-        if i%50 == 0:
+        if i%10 == 0:
             print(str(i) + ' out of ' + str(len(image_list)))
 
         # label components
@@ -73,24 +73,37 @@ def get_threshold(image):
         #areas_by_t.append([t, feature_areas])
 
     #fig = plt.gcf()
+
     peak_i = component_cts.argmax()
-    peak2_i = component_cts[peak_i+15:].argmax() + peak_i + 15
-    dip_i = component_cts[peak_i:peak2_i].argmin() + peak_i
-    threshold = (peak2_i + dip_i)/2
+    shift = min(int((len(component_cts) - peak_i)/4), len(component_cts[peak_i:]) - 1)
+    #shift = 15
+    dip_i = component_cts[peak_i:peak_i+shift].argmin() + peak_i
+    peak2_i = component_cts[dip_i:].argmax() + dip_i
 
-    #plt.plot(component_cts[dip_i:])
-    #plt.show()
+    weight = 1/2
+    threshold = weight*peak2_i + (1-weight)*dip_i + min_brightness
 
-    #classified_image = np.zeros_like(image)
-    #classified_image[image > threshold] = 1
-    #labeled_image = skimage.measure.label(classified_image)
-
-    #fig = plt.figure(figsize=(image.shape[0], image.shape[1]))
-    #fig.add_subplot(2, 1, 1)
-    #plt.imshow(image)
-    #fig.add_subplot(2, 1, 2)
-    #plt.imshow(labeled_image)
-    #plt.show()
     print(threshold)
+
+    plt.plot(component_cts)
+    plt.show()
+
+    classified_image = np.zeros_like(image)
+    classified_image[image > threshold] = 1
+    labeled_image = skimage.measure.label(classified_image)
+
+    classified_image2 = np.zeros_like(image)
+    classified_image2[image > 50] = 1
+    labeled_image2 = skimage.measure.label(classified_image2)
+
+    fig = plt.figure(figsize=(image.shape[0], image.shape[1]))
+    fig.add_subplot(1, 3, 1)
+    plt.imshow(image)
+    fig.add_subplot(1, 3, 2)
+    plt.imshow(labeled_image)
+    fig.add_subplot(1, 3, 3)
+    plt.imshow(labeled_image2)
+    plt.show()
+
 
     return threshold
